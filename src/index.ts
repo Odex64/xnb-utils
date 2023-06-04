@@ -10,10 +10,6 @@ import { walk } from 'walk';
 const successes: string[] = [];
 const fails: Array<{ file: string; error?: string }> = [];
 
-main('C:/Users/Carmine/Desktop/Editor/Parser/packed/BeachBall00.xnb', 'C:/Users/Carmine/Desktop/Editor/Parser/unpacked', unpackFile, { debug: true, onlyErrors: false });
-
-// main('C:/Users/Carmine/Desktop/Editor/Parser/unpacked/BeachBall00.json', 'C:/Users/Carmine/Desktop/Editor/Parser/packed', packFile, { debug: true, onlyErrors: false });
-
 /**
  * Unpack an XNB file to JSON.
  * @param input The path of the XNB file to unpack.

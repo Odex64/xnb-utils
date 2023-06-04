@@ -1,7 +1,7 @@
 {
-  "name": "parser",
+  "name": "xnb-utils",
   "version": "1.0.0",
-  "description": "Custom XNB parser",
+  "description": "XNB parser",
   "type": "module",
   "scripts": {
     "build": "tsc"
