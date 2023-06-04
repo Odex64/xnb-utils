@@ -1,0 +1,24 @@
+{
+  "name": "parser",
+  "version": "1.0.0",
+  "description": "Custom XNB parser",
+  "type": "module",
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Odex64",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "dxt-js": "^0.0.3",
+    "fast-png": "^6.1.0",
+    "lz4": "^0.6.5",
+    "walk": "^2.3.15"
+  },
+  "devDependencies": {
+    "@types/lz4": "^0.6.1",
+    "@types/node": "^20.2.5",
+    "@types/walk": "^2.3.1",
+    "typescript": "^5.1.3"
+  }
+}
