@@ -6,8 +6,12 @@ import XnbError from '../XnbError.js';
  * Provides functions to read any kind of data in a more comfortable way.
  */
 export default class BinaryReader extends Binary {
-  public constructor(buffer: Buffer) {
-    super(buffer);
+  public constructor(buffer: Buffer | Uint8Array | string) {
+    if (buffer instanceof Buffer) {
+      super(buffer);
+    } else {
+      super(Buffer.from(buffer));
+    }
   }
 
   // Writes another buffer into this buffer.

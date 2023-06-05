@@ -48,14 +48,14 @@ async function unpackFile(input: string, output: string): Promise<void> {
  */
 async function packFile(input: string, output: string): Promise<void> {
   try {
-    // Ensure that the input file has the right extension.
-    if (path.extname(input).toLocaleLowerCase() !== '.json') {
-      return;
-    }
-
     // Resolve the imports.
     Log.info(`Reading file '${input}' ...`);
     const json = await readXnb(input);
+
+    // Couldn't recognize the file.
+    if (!json) {
+      return;
+    }
 
     // Convert the JSON to the correct XNB.
     const buffer = xnb.pack(json);

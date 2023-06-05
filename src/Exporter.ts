@@ -50,12 +50,49 @@ export async function saveXnb(filename: string, xnb: Parsed<unknown>): Promise<b
 }
 
 // Reads an unpacked XNB file and its exports into parsed XNB. 
-export async function readXnb(filename: string): Promise<Parsed<unknown>> {
+export async function readXnb(filename: string): Promise<Parsed<unknown> | undefined> {
   // Get the directory name.
   const dirname = path.dirname(filename);
 
-  // Get the JSON for the contents.
-  const json = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  // Get file extension.
+  let json: Parsed<unknown>;
+  const extension = path.extname(filename).toLocaleLowerCase();
+
+  // Get the JSON and the contents.
+  if (extension !== '.json') {
+    json = {
+      header: {
+        target: 'w',
+        formatVersion: 5,
+        hidef: false,
+        compressed: false
+      },
+      readers: [
+        {
+          type: 'BLANK',
+          version: 0
+        }
+      ],
+      content: {
+        filename: path.basename(filename)
+      }
+    }
+    switch (extension) {
+      case '.wav':
+        json.readers[0].type = 'Microsoft.Xna.Framework.Content.SoundEffectReader';
+        break;
+
+      case '.png':
+        json.readers[0].type = 'Microsoft.Xna.Framework.Content.Texture2DReader';
+        break;
+
+      default:
+        Log.error(`Couldn't recognize the given file.`);
+        return undefined;
+    }
+  } else {
+    json = JSON.parse(fs.readFileSync(filename, 'utf8'));
+  }
 
   if (!checkParsed(json)) {
     throw new XnbError(`Invalid XNB json ${filename}`);
