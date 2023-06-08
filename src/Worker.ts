@@ -43,18 +43,20 @@ const XNB_COMPRESSED_PROLOGUE_SIZE = 14;
 
 interface Header {
   target: string;
-  formatVersion: number;
+  xnbVersion: number;
   hidef: boolean;
-  compressed: boolean;
+  compressed?: boolean;
   compressionType?: number;
+}
+
+interface ContentReader {
+  type: string;
+  version: number;
 }
 
 export interface Parsed<T> {
   header: Header;
-  readers: {
-    type: string;
-    version: number;
-  }[];
+  readers: ContentReader[];
   content: T;
 }
 
@@ -68,7 +70,7 @@ export function unpack<T>(file: Buffer, expect?: Reader<T>): Parsed<T> {
   const buffer = new LzxReader(file);
 
   // Validate the XNB file header.
-  const { target, formatVersion, hidef, compressed, compressionType } = parseHeader(buffer);
+  const { target, xnbVersion, hidef, compressed, compressionType } = parseHeader(buffer);
   Log.info('XNB file validated successfully!');
 
   // Read and validate the file size.
@@ -123,10 +125,10 @@ export function unpack<T>(file: Buffer, expect?: Reader<T>): Parsed<T> {
   Log.debug(`Readers: ${count}`);
 
   // A local copy of readers for the export process.
-  const readers: { type: string; version: number }[] = [];
+  const readers: ContentReader[] = [];
 
   // Loop over the number of readers we have.
-  const loadedReaders = [];
+  const loadedReaders: Reader<unknown>[] = [];
   for (let i = 0; i < count; i++) {
     // Read the type.
     const type = buffer.readString();
@@ -166,7 +168,7 @@ export function unpack<T>(file: Buffer, expect?: Reader<T>): Parsed<T> {
   return {
     header: {
       target,
-      formatVersion,
+      xnbVersion,
       hidef,
       compressed,
     },
@@ -185,7 +187,7 @@ export function pack(json: Parsed<unknown>): Buffer {
 
   // Set the header information.
   const target = json.header.target;
-  const formatVersion = json.header.formatVersion;
+  const xnbVersion = json.header.xnbVersion;
   const hidef = json.header.hidef;
   const lz4Compression = (target === 'a' || target === 'i');
   const compressed = lz4Compression; // Support android LZ4 compression.
@@ -194,7 +196,7 @@ export function pack(json: Parsed<unknown>): Buffer {
   const encoder = new TextEncoder();
   buffer.writeBytes(encoder.encode('XNB'));
   buffer.writeBytes(encoder.encode(target));
-  buffer.writeByte(formatVersion);
+  buffer.writeByte(xnbVersion);
 
   // Write the LZ4 mask for android compression only.
   buffer.writeByte(hidef ? 1 : 0 | ((compressed && lz4Compression) ? COMPRESSED_LZ4_MASK : 0));
@@ -314,8 +316,8 @@ function parseHeader(buffer: BinaryReader): Header {
   }
 
   // Read the XNB format version.
-  const formatVersion = buffer.readByte();
-  switch (formatVersion) {
+  const xnbVersion = buffer.readByte();
+  switch (xnbVersion) {
     case 0x3:
       Log.debug('XNB Format Version: XNA Game Studio 3.0');
       break;
@@ -326,7 +328,7 @@ function parseHeader(buffer: BinaryReader): Header {
       Log.debug('XNB Format Version: XNA Game Studio 4.0');
       break;
     default:
-      Log.warn(`XNB Format Version ${Log.toHex(formatVersion)} unknown.`);
+      Log.warn(`XNB Format Version ${Log.toHex(xnbVersion)} unknown.`);
       break;
   }
 
@@ -346,5 +348,5 @@ function parseHeader(buffer: BinaryReader): Header {
   Log.debug(`Content: ${(hidef ? 'HiDef' : 'Reach')}`);
   Log.debug(`Compressed: ${compressed}, ${compressionType === COMPRESSED_LZX_MASK ? 'LZX' : 'LZ4'}`);
 
-  return { target, formatVersion, hidef, compressed, compressionType };
+  return { target, xnbVersion, hidef, compressed, compressionType };
 }

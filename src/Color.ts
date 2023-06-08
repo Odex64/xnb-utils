@@ -7,7 +7,7 @@ export default class Color {
   public alpha: number;
   public packedValue?: number;
 
-  public constructor(red: number, green: number, blue: number, alpha: number = 255, packedValue?: number) {
+  public constructor(red: number = 0, green: number = 0, blue: number = 0, alpha: number = 0, packedValue?: number) {
     this.red = red;
     this.green = green;
     this.blue = blue;
@@ -23,6 +23,10 @@ export default class Color {
     return new Color(red, green, blue, alpha);
   }
 
+  public toBuffer(): Uint8Array {
+    return Uint8Array.of(this.red, this.green, this.blue, this.alpha);
+  }
+
   public static toArray(data: Color[]): Uint8Array {
     const values: number[] = [];
     let i = 0;
@@ -36,12 +40,16 @@ export default class Color {
     return Uint8Array.from(values);
   }
 
-  public static fromArray(data: Uint8Array): Color[] {
-    let colors: Color[] = [];
-    for (let i = 0; i < data.length; i += 4) {
-      colors.push(new Color(data[i], data[i + 1], data[i + 2], data[i + 3]));
-    }
+  public static fromArray(data: Uint8Array, index: number): Color {
+    const red = data[index]; // r
+    const green = data[index + 1]; // g
+    const blue = data[index + 2]; // b
+    const alpha = data[index + 3]; // a
 
-    return colors;
+    return new Color(red, green, blue, alpha);
   }
+}
+
+export function isSameColor(first: Color, second: Color): boolean {
+  return first.red === second.red && first.green === second.green && first.blue === second.blue && first.alpha === second.alpha;
 }

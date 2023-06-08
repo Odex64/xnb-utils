@@ -1,10 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import XnbError from './XnbError.js';
 import Log from './Log.js';
 import { Reader, ReaderWithExports } from './Type.js';
 import { getReader, Parsed } from './Worker.js';
-import { containsKey, isObject } from './Utils.js'
 
 /**
  * Checks if our reader can export/import data.
@@ -16,7 +14,11 @@ function hasExports<T, E>(reader: Reader<T>): reader is ReaderWithExports<T, E> 
 }
 
 // Saves a parsed XNB file and its exports. 
-export async function saveXnb(filename: string, xnb: Parsed<unknown>): Promise<boolean> {
+export function exportXnb(filename: string, xnb: Parsed<unknown>): boolean {
+  // Delete useless data.
+  delete xnb.header.compressed;
+  delete xnb.header.compressionType;
+
   // Get the directory name for the file.
   const dirname = path.dirname(filename);
 
@@ -50,7 +52,7 @@ export async function saveXnb(filename: string, xnb: Parsed<unknown>): Promise<b
 }
 
 // Reads an unpacked XNB file and its exports into parsed XNB. 
-export async function readXnb(filename: string): Promise<Parsed<unknown> | undefined> {
+export function importXnb(filename: string): Parsed<unknown> | undefined {
   // Get the directory name.
   const dirname = path.dirname(filename);
 
@@ -59,19 +61,17 @@ export async function readXnb(filename: string): Promise<Parsed<unknown> | undef
   const extension = path.extname(filename).toLocaleLowerCase();
 
   // Get the JSON and the contents.
+  // If no JSON is passed, assume it from the file format, otherwise read it.
   if (extension !== '.json') {
     json = {
       header: {
         target: 'w',
-        formatVersion: 5,
+        xnbVersion: 5,
         hidef: false,
         compressed: false
       },
       readers: [
-        {
-          type: 'BLANK',
-          version: 0
-        }
+        { type: 'NONE', version: 0 }
       ],
       content: {
         filename: path.basename(filename)
@@ -94,10 +94,6 @@ export async function readXnb(filename: string): Promise<Parsed<unknown> | undef
     json = JSON.parse(fs.readFileSync(filename, 'utf8'));
   }
 
-  if (!checkParsed(json)) {
-    throw new XnbError(`Invalid XNB json ${filename}`);
-  }
-
   // Get current reader and check if it can import files.
   const reader = getReader(json.readers[0].type);
   if (hasExports(reader)) {
@@ -108,30 +104,4 @@ export async function readXnb(filename: string): Promise<Parsed<unknown> | undef
   }
 
   return json;
-}
-
-/**
- * Check if object has all the required fields before packing.
- */
-function checkParsed(xnb: unknown): boolean {
-  return isObject(xnb) &&
-    containsKey(xnb, 'header') &&
-    isObject(xnb.header) &&
-    containsKey(xnb.header, 'target') &&
-    typeof xnb.header.target === 'string' &&
-    containsKey(xnb.header, 'formatVersion') &&
-    typeof xnb.header.formatVersion === 'number' &&
-    containsKey(xnb.header, 'hidef') &&
-    typeof xnb.header.hidef === 'boolean' &&
-    containsKey(xnb.header, 'compressed') &&
-    typeof xnb.header.compressed === 'boolean' &&
-    containsKey(xnb, 'readers') &&
-    xnb.readers instanceof Array &&
-    xnb.readers.every((reader) =>
-      isObject(reader) &&
-      containsKey(reader, 'type') &&
-      typeof reader.type === 'string' &&
-      containsKey(reader, 'version') &&
-      typeof reader.version === 'number'
-    ) && 'content' in xnb;
 }

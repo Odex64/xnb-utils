@@ -102,7 +102,7 @@ export default class SoundEffectReader extends ReaderWithExports<SoundEffect, So
     audio.bytePosition += 16;
     const formatSize = audio.readUInt32();
     const format = audio.readBytes(formatSize);
-    const test = audio.readChars(4);
+    audio.bytePosition += 4 // 'data'
     const dataSize = audio.readInt32();
     const data = audio.readBytes(dataSize);
 

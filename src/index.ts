@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as xnb from './Worker.js';
 import chalk from 'chalk';
 import Log from './Log.js';
-import { readXnb, saveXnb } from './Exporter.js';
+import { importXnb, exportXnb } from './Exporter.js';
 import { walk } from 'walk';
 
 // Used for displaying the successes and fails amount.
@@ -15,7 +15,7 @@ const fails: Array<{ file: string; error?: string }> = [];
  * @param input The path of the XNB file to unpack.
  * @param output The path at which to save the result.
  */
-async function unpackFile(input: string, output: string): Promise<void> {
+function unpackFile(input: string, output: string): void {
   try {
     // Ensure that the input file has the right extension.
     if (path.extname(input).toLocaleLowerCase() !== '.xnb') {
@@ -27,7 +27,7 @@ async function unpackFile(input: string, output: string): Promise<void> {
     const result = xnb.unpack(fs.readFileSync(input));
 
     // Save the converted file.
-    if (!await saveXnb(output, result)) {
+    if (!exportXnb(output, result)) {
       Log.error(`File ${output} failed to save!`);
       fails.push({ file: input });
       return;
@@ -46,11 +46,11 @@ async function unpackFile(input: string, output: string): Promise<void> {
  * @param input The path of the JSON file to pack.
  * @param output The path at which to save the resulting file.
  */
-async function packFile(input: string, output: string): Promise<void> {
+function packFile(input: string, output: string): void {
   try {
     // Resolve the imports.
     Log.info(`Reading file '${input}' ...`);
-    const json = await readXnb(input);
+    const json = importXnb(input);
 
     // Couldn't recognize the file.
     if (!json) {
@@ -69,7 +69,7 @@ async function packFile(input: string, output: string): Promise<void> {
   }
 }
 
-async function main(input: string, output: string, handler: (input: string, output: string) => unknown, options: { debug: boolean; onlyErrors: boolean }): Promise<unknown> {
+function main(input: string, output: string, handler: (input: string, output: string) => unknown, options: { debug: boolean; onlyErrors: boolean }): unknown {
   // Configure logger.
   Log.showInfo = !options.onlyErrors;
   Log.showWarnings = !options.onlyErrors;
@@ -99,7 +99,7 @@ async function main(input: string, output: string, handler: (input: string, outp
     }
 
     // Unpack/Pack the file.
-    return await handler(input, output);
+    return handler(input, output);
   }
 
   // If output is not defined, it is the same as input.
@@ -109,7 +109,7 @@ async function main(input: string, output: string, handler: (input: string, outp
 
   // Go through each file.
   const walker = walk(input, { filters: ['json', 'xnb'] });
-  walker.on('file', async (root: string, stats: { name: string; }, next: () => void) => {
+  walker.on('file', (root: string, stats: { name: string; }, next: () => void) => {
 
     // Get the extension.
     const ext = path.extname(stats.name).toLocaleLowerCase();
@@ -130,7 +130,7 @@ async function main(input: string, output: string, handler: (input: string, outp
     }
 
     // Unpack and load next file.
-    await handler(inputFile, outputFile);
+    handler(inputFile, outputFile);
     next();
   });
 
