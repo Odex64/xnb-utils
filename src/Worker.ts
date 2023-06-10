@@ -10,11 +10,17 @@ import SFDItemReader from './Readers/SFDItemReader.js';
 import { decompress } from './Decompress.js';
 import { decodeBlock, encodeBlock, encodeBound } from 'lz4';
 import { Reader, Type } from './Type.js';
+import SFDAnimationReader from './Readers/SFDAnimationReader.js';
 
+/**
+ * Contains list of all available readers.
+ * New readers must be added here in order to work.
+ */
 const readers: Reader<unknown>[] = [
-  new SFDItemReader(),
   new Texture2DReader(),
-  new SoundEffectReader()
+  new SoundEffectReader(),
+  new SFDItemReader(),
+  new SFDAnimationReader()
 ];
 
 /**
@@ -24,11 +30,11 @@ const readers: Reader<unknown>[] = [
  *
  * Throws an error if no such type can be found.
  */
-export function getReader(type: string | Type): Reader<unknown> {
+export function getReader(type: string | Type): Reader<unknown> | undefined {
   const parsed = typeof type === 'string' ? Type.fromString(type) : type;
-  const found = readers.find((e) => e.type.name === parsed.name);
+  const found = readers.find((e) => e.type.equals(parsed));
 
-  if (typeof found === 'undefined') {
+  if (found === undefined) {
     throw new XnbError(`Invalid reader type '${type}' passed, unable to resolve!`);
   }
 
@@ -137,7 +143,7 @@ export function unpack<T>(file: Buffer, expect?: Reader<T>): Parsed<T> {
     const version = buffer.readInt32();
 
     // Get the reader for this type.
-    const reader = getReader(type);
+    const reader = getReader(type)!;
 
     // Add reader to the list.
     loadedReaders.push(reader);
@@ -213,9 +219,9 @@ export function pack(json: Parsed<unknown>): Buffer {
   buffer.write7BitNumber(json.readers.length);
 
   // Loop over the readers and load the types.
-  const readers = [];
+  const readers: Reader<unknown>[] = [];
   for (let reader of json.readers) {
-    readers.push(getReader(reader.type));
+    readers.push(getReader(reader.type)!);
     buffer.writeString(reader.type);
     buffer.writeUInt32(reader.version);
   }

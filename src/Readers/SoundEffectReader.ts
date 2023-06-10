@@ -17,7 +17,7 @@ interface SoundEffectExport {
 
 export default class SoundEffectReader extends ReaderWithExports<SoundEffect, SoundEffectExport> {
   public constructor() {
-    super(new Type({ name: 'Microsoft.Xna.Framework.Content.SoundEffectReader' }), true);
+    super(new Type('Microsoft.Xna.Framework.Content.SoundEffectReader'));
   }
 
   public override readFrom(buffer: BinaryReader, resolver: ReaderManager): SoundEffect {

@@ -21,7 +21,7 @@ interface Texture2DExport {
 
 export default class Texture2DReader extends ReaderWithExports<Texture2D, Texture2DExport> {
   public constructor() {
-    super(new Type({ name: 'Microsoft.Xna.Framework.Content.Texture2DReader' }), true);
+    super(new Type('Microsoft.Xna.Framework.Content.Texture2DReader'));
   }
 
   public override readFrom(buffer: BinaryReader, resolver: ReaderManager): Texture2D {

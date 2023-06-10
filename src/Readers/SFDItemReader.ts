@@ -52,7 +52,7 @@ interface SFDItemExport {
 
 export default class SFDItemReader extends ReaderWithExports<SFDItem, SFDItemExport> {
   public constructor() {
-    super(new Type({ name: 'SFD.Content.ItemsContentTypeReader' }), true);
+    super(new Type('SFD.Content.ItemsContentTypeReader'));
   }
 
   public override readFrom(buffer: BinaryReader, manager: ReaderManager): SFDItem {
@@ -249,7 +249,6 @@ export default class SFDItemReader extends ReaderWithExports<SFDItem, SFDItemExp
             height: png.height,
             width: png.width
           })
-          // files.push(exportFile(png, `_${part.type}_${exportedFiles.length + 1}.png`));
         } else {
           textures.push(undefined);
         }
